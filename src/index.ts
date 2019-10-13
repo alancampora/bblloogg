@@ -18,6 +18,7 @@ const typeDefs = gql`
   }
 
   type Query {
+    user(id: String): User
     users: [User]
   }
 `;
@@ -31,6 +32,18 @@ const resolvers = {
           .collection('user')
           .get();
         return users.docs.map(user => user.data());
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async user(object: any, args: { id: string }) {
+      try {
+        const userDoc = await admin
+          .firestore()
+          .doc(`user/${args.id}`)
+          .get();
+
+        return userDoc.data();
       } catch (error) {
         console.log(error);
       }
