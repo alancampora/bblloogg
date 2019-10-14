@@ -1,6 +1,9 @@
 import { ApolloServer } from 'apollo-server';
 import { gql } from 'apollo-server';
 import admin from 'firebase-admin';
+import merge from 'lodash/merge';
+import postResolver from './post/resolvers';
+import userResolver from './user/resolvers';
 
 const serviceAccount = require('../firebase.json');
 
@@ -11,45 +14,26 @@ admin.initializeApp({
 
 const typeDefs = gql`
   type User {
-    id: ID!
     name: String!
     surname: String!
     nickname: String!
   }
 
+  type Post {
+    user: User!
+    content: String!
+    title: String!
+  }
+
   type Query {
     user(id: String): User
     users: [User]
+    posts: [Post]
+    post(id: String): Post
   }
 `;
 
-const resolvers = {
-  Query: {
-    async users() {
-      try {
-        const users = await admin
-          .firestore()
-          .collection('user')
-          .get();
-        return users.docs.map(user => user.data());
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    async user(object: any, args: { id: string }) {
-      try {
-        const userDoc = await admin
-          .firestore()
-          .doc(`user/${args.id}`)
-          .get();
-
-        return userDoc.data();
-      } catch (error) {
-        console.log(error);
-      }
-    },
-  },
-};
+const resolvers = merge(userResolver, postResolver);
 
 const server = new ApolloServer({ resolvers, typeDefs });
 
