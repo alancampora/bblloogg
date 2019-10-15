@@ -1,21 +1,19 @@
 import admin from 'firebase-admin';
-import {
-  DocumentData,
-  DocumentSnapshot,
-} from '@google-cloud/firestore';
-
+import { DocumentData, DocumentSnapshot } from '@google-cloud/firestore';
 
 const expandUser = async function(post: DocumentSnapshot) {
   const postData: DocumentData | undefined = post.data();
-  const userData: DocumentSnapshot = postData && await postData.user.get();
+  const userData: DocumentSnapshot = postData && (await postData.user.get());
 
   return { ...postData, user: userData.data() };
 };
 
 export default {
   Query: {
-    async posts() {
+    async posts(_: any, __: any, { req }: any) {
       try {
+        console.log('user id', req.userId);
+
         const posts = await admin
           .firestore()
           .collection('post')
@@ -35,7 +33,7 @@ export default {
           .doc(`post/${args.id}`)
           .get();
 
-        const postsData = await expandUser(postDoc);  
+        const postsData = await expandUser(postDoc);
         return postsData;
       } catch (error) {
         console.log(error);
